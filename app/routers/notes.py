@@ -1,68 +1,49 @@
-from fastapi import APIRouter, HTTPException, status
-from app.schemas.notes import Note
+from app.database import get_db
+from app.services import notes
+from fastapi import APIRouter, HTTPException, status, Depends
+from app.schemas.notes import MessageResponse, Note, NoteResponse
+from app.services.notes import create_note, delete_note, get_all_notes, get_note_by_id, update_note
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-notes = []
-next_id = 1
 
 
-@router.get("/notes")
-def get_notes():
-    return {"notes": notes}
+@router.get("/notes", response_model=list[NoteResponse])
+def get_notes(db: Session = Depends(get_db)):
+    notes = get_all_notes(db)
+    return notes
+
+    
 
 
-@router.post("/notes", status_code=status.HTTP_201_CREATED)
-def post_notes(note: Note):
-    global next_id
+@router.post("/notes", status_code=status.HTTP_201_CREATED, response_model=NoteResponse)
+def post_notes(note: Note, db: Session = Depends(get_db)):
+    db_note = create_note(db, note)
+    return db_note
 
-    new_note = {
-        "id": next_id,
-        "title": note.title,
-        "content": note.content
-    }
 
-    next_id += 1
-    notes.append(new_note)
+@router.get("/notes/{note_id}", response_model=NoteResponse)
+def get_note(note_id: int, db: Session = Depends(get_db)):
+    note = get_note_by_id(db, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    return note
 
+
+@router.put("/notes/{note_id}", response_model=NoteResponse)
+def put_note(note_id: int, updated_note: Note, db: Session = Depends(get_db)):
+    note = update_note(db, note_id, updated_note)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    return note
+
+
+@router.delete("/notes/{note_id}", response_model=MessageResponse)
+def delete_note_endpoint(note_id: int, db: Session = Depends(get_db)):
+    success = delete_note(db, note_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Note not found")
     return {
-        "message": "note posted",
-        "note": new_note
+        "message": "note deleted"
     }
-
-
-@router.get("/notes/{note_id}")
-def get_note(note_id: int):
-    for note in notes:
-        if note["id"] == note_id:
-            return note
-
-    raise HTTPException(status_code=404, detail="Note not found")
-
-
-@router.put("/notes/{note_id}")
-def update_note(note_id: int, updated_note: Note):
-    for note in notes:
-        if note["id"] == note_id:
-            note["title"] = updated_note.title
-            note["content"] = updated_note.content
-
-            return {
-                "message": "note updated",
-                "note": note
-            }
-
-    raise HTTPException(status_code=404, detail="Note not found")
-
-
-@router.delete("/notes/{note_id}")
-def delete_note(note_id: int):
-    for note in notes:
-        if note["id"] == note_id:
-            notes.remove(note)
-
-            return {
-                "message": "note deleted"
-            }
-
-    raise HTTPException(status_code=404, detail="Note not found")
