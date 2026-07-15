@@ -1,3 +1,5 @@
+import hashlib
+
 from fastapi import security
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -44,3 +46,5 @@ def create_refresh_token(data: dict, expires_delta: int = 604800):
     encoded_jwt = jwt.encode(to_encode,secret, algorithm=algo)
     return encoded_jwt
 
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
