@@ -10,12 +10,30 @@ def create_note(db: Session, note: NoteCreate, user_id: int):
     db.refresh(db_note)
     return db_note
 
-def get_all_notes(db: Session, user_id: int):
-    notes= db.query(models.Note).filter(models.Note.owner_id == user_id).all()
-    if not notes:
-        return []
-    return notes
-        
+def get_all_notes(
+    db: Session,
+    user_id: int,
+    skip: int = 0,
+    limit: int = 10,
+    sort_by: str = "created_at",
+    order: str = "desc",
+):
+    sortable_fields = {
+        "created_at": models.Note.created_at,
+        "updated_at": models.Note.updated_at,
+        "title": models.Note.title,
+    }
+    sort_column = sortable_fields.get(sort_by, models.Note.created_at)
+
+    if order == "asc":
+        sort_column = sort_column.asc()
+    else:
+        sort_column = sort_column.desc()
+
+    query = db.query(models.Note).filter(models.Note.owner_id == user_id)
+    total = query.count()
+    notes = query.order_by(sort_column).offset(skip).limit(limit).all()
+    return notes, total
 
 def get_note_by_id(db: Session, note_id: int, user_id: int):
     note = db.query(models.Note).filter(models.Note.id == note_id, models.Note.owner_id == user_id).first()

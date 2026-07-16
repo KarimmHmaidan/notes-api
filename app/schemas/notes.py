@@ -14,3 +14,10 @@ class NoteResponse(NoteCreate):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class PaginatedNotes(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: list[NoteResponse]
