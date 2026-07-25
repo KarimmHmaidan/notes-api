@@ -12,8 +12,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 load_dotenv()
-algo = os.getenv("jwt_algorithm")
-secret = os.getenv("secret_key")
+algo = os.getenv("JWT_ALGORITHM")
+secret = os.getenv("SECRET_KEY")
 
 
 
