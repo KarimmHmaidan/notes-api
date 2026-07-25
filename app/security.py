@@ -4,13 +4,10 @@ from fastapi import security
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
-import os
-from dotenv import load_dotenv
+from app.core.config import settings
 
-load_dotenv()
-
-algo = os.getenv("JWT_ALGORITHM")
-secret = os.getenv("SECRET_KEY")
+algo = settings.jwt_algorithm
+secret = settings.secret_key
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
