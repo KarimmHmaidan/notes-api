@@ -10,6 +10,9 @@ app = FastAPI()
 def root():
     return {"message": "Welcome to Notes API"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 app.include_router(notes_router)
 app.include_router(auth_router)
